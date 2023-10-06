@@ -13,7 +13,7 @@ import {textScale} from '../../Styles/responsiveStyles';
 import {APP_PADDING_HORIZONTAL} from '../../Styles/commonStyle';
 import {Constants} from '../../Utility/imdex';
 import {useNavigation} from '@react-navigation/native';
-import { image185, image342 } from '../../API/movieDB';
+import { fallbackMoviePoster, image185, image342 } from '../../API/movieDB';
 
 const MovieList = ({title, data, hideSeeAll}) => {
   const navigation = useNavigation();
@@ -53,7 +53,7 @@ const MovieList = ({title, data, hideSeeAll}) => {
               <View style={{marginTop: spacing.MARGIN_12}}>
                 <Image
                   // source={require('../../Assets/Images/img.jpg')}
-                  source={{uri: image185(item.poster_path)}}
+                  source={{uri: image185(item.poster_path) || fallbackMoviePoster}}
                   style={{
                     width: spacing.FULL_WIDTH * 0.33,
                     height: spacing.FULL_HEIGHT * 0.27,

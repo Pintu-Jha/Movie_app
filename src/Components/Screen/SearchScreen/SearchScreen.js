@@ -7,6 +7,8 @@ import {
   TextInput,
   ScrollView,
   TouchableWithoutFeedback,
+  FlatList,
+  ActivityIndicator
 } from 'react-native';
 import React, {useState, useCallback} from 'react';
 import colors from '../../../Utility/colors';
@@ -16,37 +18,60 @@ import {APP_PADDING_HORIZONTAL} from '../../../Styles/commonStyle';
 import {textScale} from '../../../Styles/responsiveStyles';
 import {Constants} from '../../../Utility/imdex';
 import Loader from '../../Common/Loader';
-import debounce from 'lodash';
-import {image185, searchMovie} from '../../../API/movieDB';
+import {
+  fallbackMoviePoster,
+  image185,
+  searchMovies,
+} from '../../../API/movieDB';
+import VirtualizedView from '../../Common/VirtualizedView';
+
+let loadMore = true
 
 const SearchScreen = ({navigation}) => {
   const [result, setResult] = useState([]);
+  const [value, setValue] = useState('');
   const [loader, setLoader] = useState(false);
+  const [page , setPage] = useState(1)
 
-  const handleSerach = value => {
-    // console.log(value)
-    if (value && value.length > 2) {
-      setLoader(true);
-      searchMovie({
+  const handleSerach = () => {
+    if (value != '') {
+     if(page == '1') setLoader(true)
+      searchMovies({
         query: value,
-        include_adult: true,
+        include_adult: false,
         language: 'en-US',
-        page: '1',
+        page: page,
       }).then(data => {
         setLoader(false);
+        if( data.total_results == 0){
+          loadMore = false
+        }
         console.log('sadfsggdsfg', data);
-        if(data && data.results) setResult(data.results) 
+        if (data && data.results) setResult([...result,...data.results]);
+        setPage(page + 1);
       });
-    }else{
-      setLoader(false)
-      setResult([])
+    } else {
+      setLoader(false);
+      setResult([]);
     }
   };
 
-  const handleTextBounce = useCallback((debounce(handleSerach, 400), []));
+  const increseData = () =>{
+    if(loadMore){
+   handleSerach()
+  }
+}
+
+const listFooterComponent = () =>{
+  return(
+    <ActivityIndicator style={{marginVertical:APP_PADDING_HORIZONTAL}} size={25}/>
+  )
+}
+
+  // const handleTextBounce = useCallback((debounce(handleSerach, 400), []));
 
   return (
-    <WrapperContainer>
+    <View style={{flex: 1, backgroundColor: colors.transparentBlackHard}}>
       <SafeAreaView
         style={{
           alignItems: 'center',
@@ -54,7 +79,7 @@ const SearchScreen = ({navigation}) => {
           marginVertical: APP_PADDING_HORIZONTAL,
           flexDirection: 'row',
         }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={1}>
+        <TouchableWithoutFeedback onPress={() => navigation.goBack()} activeOpacity={1}>
           <Image
             source={require('../../../Assets/Images/back.png')}
             style={{
@@ -64,7 +89,7 @@ const SearchScreen = ({navigation}) => {
               tintColor: colors.white,
             }}
           />
-        </TouchableOpacity>
+        </TouchableWithoutFeedback>
         <View
           style={{
             marginLeft: spacing.MARGIN_10,
@@ -75,14 +100,16 @@ const SearchScreen = ({navigation}) => {
             backgroundColor: colors.grey900,
           }}>
           <TextInput
-            onChangeText={handleSerach}
+            onChangeText={txt => setValue(txt)}
+            value={value}
+            onSubmitEditing={handleSerach}
             placeholder="Search Movie"
             placeholderTextColor={colors.white}
             style={{
               paddingLeft: spacing.PADDING_10,
               padding: spacing.PADDING_6,
-              color:colors.white,
-              fontSize:textScale(12)
+              color: colors.white,
+              fontSize: textScale(12),
             }}
           />
         </View>
@@ -90,63 +117,58 @@ const SearchScreen = ({navigation}) => {
       {loader ? (
         <Loader />
       ) : result.length > 0 ? (
-        <View>
-          <ScrollView
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{paddingHorizontal: spacing.PADDING_16}}
-            style={{marginTop: spacing.MARGIN_6}}>
-            <Text
-              style={{
-                color: colors.white,
-                fontSize: textScale(14),
-                marginLeft: spacing.MARGIN_2,
-              }}>
-              Results({result.length})
-            </Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-              }}>
-              {result.map((item,index ) => {
-                return (
-                  <TouchableOpacity
-                    key={'result' + index}
-                    onPress={() =>
-                      navigation.push(Constants.SCREEN_MOVIE, item)
-                    }>
-                    <View
+        <VirtualizedView>
+          <Text
+            style={{
+              color: colors.white,
+              fontSize: textScale(14),
+              marginLeft: spacing.MARGIN_2,
+            }}>
+            Results({result.length})
+          </Text>
+          <FlatList
+            data={result}
+            style={{flexDirection: 'column'}}
+            numColumns={2}
+            keyExtractor={(item)=>`${item.id}`}
+            onEndReached={increseData}
+            ListFooterComponent={listFooterComponent}
+            renderItem={({item, index}) => {
+              return (
+                <TouchableWithoutFeedback
+                  key={'result' + index}
+                  onPress={() => navigation.push(Constants.SCREEN_MOVIE, item)}>
+                  <View
+                    style={{
+                      paddingVertical: 14,
+                      paddingHorizontal: spacing.PADDING_12,
+                    }}>
+                    <Image
+                      source={{
+                        uri: image185(item?.poster_path) || fallbackMoviePoster,
+                      }}
                       style={{
-                        marginTop: spacing.MARGIN_4,
-                        marginBottom: spacing.MARGIN_8,
+                        width: spacing.FULL_WIDTH * 0.44,
+                        height: spacing.FULL_HEIGHT * 0.3,
+                        borderRadius: spacing.RADIUS_10,
+                      }}
+                    />
+                    <Text
+                      style={{
+                        color: colors.white,
+                        alignSelf: 'center',
+                        marginTop: spacing.MARGIN_2,
                       }}>
-                      <Image
-                        // source={require('../../../Assets/Images/img.png')}
-                        source={{uri: image185(item?.poster_path)}}
-                        style={{
-                          width: spacing.FULL_WIDTH * 0.44,
-                          height: spacing.FULL_HEIGHT * 0.3,
-                          borderRadius: spacing.RADIUS_10,
-                        }}
-                      />
-                      <Text
-                        style={{
-                          color: colors.white,
-                          alignSelf: 'center',
-                          marginTop: spacing.MARGIN_2,
-                        }}>
-                        {item?.title.length > 22
-                          ? item?.title.slice(0, 22) + '...'
-                          : item?.title}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </ScrollView>
-        </View>
+                      {item?.title.length > 22
+                        ? item?.title.slice(0, 22) + '...'
+                        : item?.title}
+                    </Text>
+                  </View>
+                </TouchableWithoutFeedback>
+              );
+            }}
+          />
+        </VirtualizedView>
       ) : (
         <View
           style={{
@@ -163,7 +185,7 @@ const SearchScreen = ({navigation}) => {
           />
         </View>
       )}
-    </WrapperContainer>
+    </View>
   );
 };
 

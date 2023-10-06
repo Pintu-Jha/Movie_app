@@ -5,7 +5,7 @@ import colors from '../../Utility/colors';
 import {APP_PADDING_HORIZONTAL} from '../../Styles/commonStyle';
 import {textScale} from '../../Styles/responsiveStyles';
 import {Constants} from '../../Utility/imdex';
-import {image185, image342} from '../../API/movieDB';
+import {fallbackPersonImage, image185, image342} from '../../API/movieDB';
 
 const Cast = ({cast, navigation}) => {
   return (
@@ -44,7 +44,7 @@ const Cast = ({cast, navigation}) => {
                   }}>
                   <Image
                     // source={require('../../Assets/Images/image.jpeg')}
-                    source={{uri: image342(person?.profile_path)}}
+                    source={{uri: image342(person?.profile_path) || fallbackPersonImage}}
                     style={{
                       borderRadius: spacing.RADIUS_100,
                       width: spacing.WIDTH_80,

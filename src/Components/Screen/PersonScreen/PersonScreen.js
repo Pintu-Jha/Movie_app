@@ -8,7 +8,7 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import {textScale} from '../../../Styles/responsiveStyles';
 import MovieList from '../../Common/MovieList';
 import Loader from '../../Common/Loader';
-import {fetchPersonDetails, fetchPersonMovies, image342} from '../../../API/movieDB';
+import {fallbackPersonImage, fetchPersonDetails, fetchPersonMovies, image342} from '../../../API/movieDB';
 
 const PersonScreen = () => {
   const navigation = useNavigation();
@@ -83,7 +83,7 @@ const PersonScreen = () => {
               }}>
               <Image
                 // source={require('../../../Assets/Images/image.jpeg')}
-                source={{uri: image342(person?.profile_path)}}
+                source={{uri: image342(person?.profile_path) || fallbackPersonImage}}
                 style={{
                   width: spacing.WIDTH_320,
                   height: spacing.HEIGHT_320,

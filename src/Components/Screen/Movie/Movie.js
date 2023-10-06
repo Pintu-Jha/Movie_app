@@ -18,6 +18,7 @@ import VirtualizedView from '../../Common/VirtualizedView';
 import MovieList from '../../Common/MovieList';
 import Loader from '../../Common/Loader';
 import {
+  fallbackMoviePoster,
   fetchMoviesCredits,
   fetchMoviesDetails,
   fetchMoviesSimilar,
@@ -94,7 +95,7 @@ const Movie = ({navigation}) => {
             <View>
               <Image
                 // source={require('../../../Assets/Images/img.png')}
-                source={{uri: image500(movies?.poster_path)}}
+                source={{uri: image500(movies?.poster_path) || fallbackMoviePoster}}
                 style={{
                   width: spacing.FULL_WIDTH,
                   height: spacing.FULL_HEIGHT * 0.65,

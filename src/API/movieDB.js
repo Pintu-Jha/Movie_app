@@ -7,7 +7,9 @@ const apiBaseUrl = 'https://api.themoviedb.org/3';
 const trendingMovieEndpoint = `${apiBaseUrl}/trending/movie/day?api_key=${apiKey}`;
 const upcomingMovieEndpoint = `${apiBaseUrl}/movie/upcoming?api_key=${apiKey}`;
 const topRatedMovieEndpoint = `${apiBaseUrl}/movie/top_rated?api_key=${apiKey}`;
-const searchMovieEndpoint = `${apiBaseUrl}/search/movie?api_key=${apiKey}`;
+const searchMovieEndpoint1 = `${apiBaseUrl}/search/movie?api_key=${apiKey}&page=1`;
+const searchMovieEndpoint2 = `${apiBaseUrl}/search/movie?api_key=${apiKey}&page=2`;
+const searchMovieEndpoint3 = `${apiBaseUrl}/search/movie?api_key=${apiKey}&page=3`;
 
 //dynamic endpoints
 const detailsMovieEndpoint = id =>
@@ -22,6 +24,12 @@ const personDetailsEndpoint = id =>
   `${apiBaseUrl}/person/${id}?api_key=${apiKey}`;
 const personMoviesEndpoint = id =>
   `${apiBaseUrl}/person/${id}/movie_credits?api_key=${apiKey}`;
+
+// fallback images
+export const fallbackMoviePoster =
+  'https://img.myloview.com/stickers/white-laptop-screen-with-hd-video-technology-icon-isolated-on-grey-background-abstract-circle-random-dots-vector-illustration-400-176057922.jpg';
+export const fallbackPersonImage =
+  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmUiF-YGjavA63_Au8jQj7zxnFxS_Ay9xc6pxleMqCxH92SzeNSjBTwZ0l61E4B3KTS7o&usqp=CAU';
 
 export const image500 = path =>
   path ? `https://image.tmdb.org/t/p/w500${path}` : null;
@@ -75,6 +83,22 @@ export const fetchPersonMovies = id => {
   return apiCall(personMoviesEndpoint(id));
 };
 
-export const searchMovie = params => {
-  return apiCall(searchMovieEndpoint, params);
-};
+ export const searchMovies = params => {
+    return apiCall(searchMovieEndpoint1, params);
+  };
+
+
+// const searchMovie1 = params => {
+//   return apiCall(searchMovieEndpoint1, params);
+// };
+// const searchMovie2 = params => {
+//   return apiCall(searchMovieEndpoint2, params);
+// };
+// const searchMovie3 = params => {
+//   return apiCall(searchMovieEndpoint3, params);
+// };
+
+// export const searchMovies = () => {
+//   const saveData = searchMovie1;
+//   return saveData;
+// };
