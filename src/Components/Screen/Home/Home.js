@@ -5,8 +5,9 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {memo, useCallback, useEffect, useState} from 'react';
 import colors from '../../../Utility/colors';
 import {spacing} from '../../../Styles/spacing';
 import {Images} from '../../../Utility/imgPath';
@@ -24,11 +25,17 @@ import {
 } from '../../../API/movieDB';
 import VirtualizedView from '../../Common/VirtualizedView';
 
+
+
+let loadMore = true;
+
 const Home = ({navigation}) => {
   const [tranding, setTreanding] = useState([]);
   const [upcoming, setUpComing] = useState([]);
   const [topRated, setTopRated] = useState([]);
   const [loding, setLoding] = useState(true);
+  const [page, setPage] = useState(1);
+  const [showFoterLoader, setShowFoterLoader] = useState(false);
 
   useEffect(() => {
     getTrendingMovies();
@@ -37,21 +44,61 @@ const Home = ({navigation}) => {
   }, []);
 
   const getTrendingMovies = async () => {
-    const data = await fetchTrendingMovies();
-    // console.log('trending movies',data)
-    if (data && data.results) setTreanding(data.results);
+    const data = await fetchTrendingMovies({
+      page: page,
+    });
+    // console.log('trending movies', data.results);
+    if (data.total_results.length == 0) {
+      loadMore = false;
+    }
+    if (data && data.results) setTreanding([...tranding, ...data.results]);
+    setPage(page + 1);
     setLoding(false);
+    // setShowFoterLoader(false);
   };
   const getUpComingMovies = async () => {
-    const data = await fetchUpComingMovies();
+    const data = await fetchUpComingMovies({
+      page: page,
+    });
     // console.log('trending movies',data)
-    if (data && data.results) setUpComing(data.results);
+    if (data.total_results.length == 0) {
+      loadMore = false;
+    }
+    if (data && data.results) setUpComing([...upcoming, ...data.results]);
+    setPage(page + 1);
+    setLoding(false);
   };
   const getTopRatedMovies = async () => {
-    const data = await fetchTopRatedMovies();
+    const data = await fetchTopRatedMovies({
+      page: page,
+    });
     // console.log('trending movies',data)
-    if (data && data.results) setTopRated(data.results);
+    if (data.total_results.length == 0) {
+      loadMore = false;
+    }
+    if (data && data.results) setTopRated([...topRated,...data.results]);
+    setPage(page + 1);
+    setLoding(false);
   };
+
+  const onEndReached = () => {
+    if (loadMore) {
+      // setShowFoterLoader(true);
+      getTrendingMovies();
+      getTopRatedMovies();
+      getUpComingMovies();
+    }
+  };
+
+  const listFooterComponent = useCallback(() => {
+    return (
+      <ActivityIndicator
+        style={{marginRight: APP_PADDING_HORIZONTAL}}
+        size={25}
+      />
+    );
+  }, []);
+
   return (
     <VirtualizedView>
       <WrapperContainer>
@@ -71,11 +118,26 @@ const Home = ({navigation}) => {
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{paddingBottom: spacing.PADDING_10}}>
-            {tranding.length > 0 && <TrandingMovie data={tranding} />}
+            {tranding.length > 0 && (
+              <TrandingMovie
+                data={tranding}
+                onEndReached={onEndReached}
+                listFooterComponent={listFooterComponent}
+              />
+            )}
 
-            {upcoming.length > 0 && <MovieList title="UpComing" data={upcoming} />}
+            {upcoming.length > 0 && (
+              <MovieList
+                title="UpComing"
+                data={upcoming}
+                onEndReached={onEndReached}
+                listFooterComponent={listFooterComponent}
+              />
+            )}
 
-           { topRated.length > 0 && <MovieList title="Top Rated" data={topRated} />}
+            {topRated.length > 0 && (
+              <MovieList title="Top Rated" data={topRated} />
+            )}
           </ScrollView>
         )}
       </WrapperContainer>
@@ -83,7 +145,7 @@ const Home = ({navigation}) => {
   );
 };
 
-export default Home;
+export default memo(Home);
 
 const Styles = StyleSheet.create({
   headerContainer: {

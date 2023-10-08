@@ -2,17 +2,14 @@ import {
   View,
   Text,
   SafeAreaView,
-  TouchableOpacity,
   Image,
   TextInput,
-  ScrollView,
   TouchableWithoutFeedback,
   FlatList,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, memo} from 'react';
 import colors from '../../../Utility/colors';
-import WrapperContainer from '../../Common/WrapperContainer';
 import {spacing} from '../../../Styles/spacing';
 import {APP_PADDING_HORIZONTAL} from '../../../Styles/commonStyle';
 import {textScale} from '../../../Styles/responsiveStyles';
@@ -25,17 +22,18 @@ import {
 } from '../../../API/movieDB';
 import VirtualizedView from '../../Common/VirtualizedView';
 
-let loadMore = true
+let loadMore = true;
 
 const SearchScreen = ({navigation}) => {
   const [result, setResult] = useState([]);
   const [value, setValue] = useState('');
   const [loader, setLoader] = useState(false);
-  const [page , setPage] = useState(1)
+  const [page, setPage] = useState(1);
+  const [showFoterLoader, setShowFoterLoader] = useState(false);
 
   const handleSerach = () => {
     if (value != '') {
-     if(page == '1') setLoader(true)
+      if (page == '1') setLoader(true);
       searchMovies({
         query: value,
         include_adult: false,
@@ -43,12 +41,13 @@ const SearchScreen = ({navigation}) => {
         page: page,
       }).then(data => {
         setLoader(false);
-        if( data.total_results == 0){
-          loadMore = false
+        if (data.total_results.length == 0) {
+          loadMore = false;
         }
-        console.log('sadfsggdsfg', data);
-        if (data && data.results) setResult([...result,...data.results]);
+        // console.log('sadfsggdsfg', data.total_results);
+        if (data && data.results) setResult([...result, ...data.results]);
         setPage(page + 1);
+        setShowFoterLoader(false);
       });
     } else {
       setLoader(false);
@@ -56,19 +55,24 @@ const SearchScreen = ({navigation}) => {
     }
   };
 
-  const increseData = () =>{
-    if(loadMore){
-   handleSerach()
-  }
-}
+  const keyExtractor = useCallback((item) => `${item.id}`);
 
-const listFooterComponent = () =>{
-  return(
-    <ActivityIndicator style={{marginVertical:APP_PADDING_HORIZONTAL}} size={25}/>
-  )
-}
+  const increseData = () => {
+    if (loadMore) {
+      setShowFoterLoader(true);
+      handleSerach();
+    }
+  };
 
-  // const handleTextBounce = useCallback((debounce(handleSerach, 400), []));
+  const listFooterComponent = useCallback(() => {
+    return (
+      <ActivityIndicator
+        style={{marginVertical: APP_PADDING_HORIZONTAL}}
+        size={25}
+        color={colors.white}
+      />
+    );
+  }, []);
 
   return (
     <View style={{flex: 1, backgroundColor: colors.transparentBlackHard}}>
@@ -79,13 +83,14 @@ const listFooterComponent = () =>{
           marginVertical: APP_PADDING_HORIZONTAL,
           flexDirection: 'row',
         }}>
-        <TouchableWithoutFeedback onPress={() => navigation.goBack()} activeOpacity={1}>
+        <TouchableWithoutFeedback
+          onPress={() => navigation.goBack()}
+          activeOpacity={1}>
           <Image
             source={require('../../../Assets/Images/back.png')}
             style={{
               width: spacing.WIDTH_30,
               height: spacing.HEIGHT_30,
-              // transform: [{rotate: '180deg'}],
               tintColor: colors.white,
             }}
           />
@@ -130,9 +135,9 @@ const listFooterComponent = () =>{
             data={result}
             style={{flexDirection: 'column'}}
             numColumns={2}
-            keyExtractor={(item)=>`${item.id}`}
+            keyExtractor={keyExtractor}
             onEndReached={increseData}
-            ListFooterComponent={listFooterComponent}
+            ListFooterComponent={showFoterLoader && listFooterComponent}
             renderItem={({item, index}) => {
               return (
                 <TouchableWithoutFeedback
@@ -189,4 +194,4 @@ const listFooterComponent = () =>{
   );
 };
 
-export default SearchScreen;
+export default memo(SearchScreen);

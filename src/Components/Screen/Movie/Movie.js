@@ -176,11 +176,13 @@ const Movie = ({navigation}) => {
             {movies?.id && cast.length > 0 && (
               <Cast navigation={navigation} cast={cast} />
             )}
+            <View style={{marginBottom:APP_PADDING_HORIZONTAL}}>
             <MovieList
               title={'Similar Movie'}
               hideSeeAll={true}
               data={similarMovie}
             />
+            </View>
           </>
         )}
       </VirtualizedView>

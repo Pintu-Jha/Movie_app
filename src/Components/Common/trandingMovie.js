@@ -5,8 +5,9 @@ import {
   FlatList,
   TouchableWithoutFeedback,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
-import React from 'react';
+import React, {memo, useCallback} from 'react';
 import {spacing} from '../../Styles/spacing';
 import {height, textScale, width} from '../../Styles/responsiveStyles';
 import colors from '../../Utility/colors';
@@ -15,11 +16,12 @@ import {Constants} from '../../Utility/imdex';
 import {useNavigation} from '@react-navigation/native';
 import {image500} from '../../API/movieDB';
 
-const TrandingMovie = ({data}) => {
+const TrandingMovie = ({data, onEndReached, listFooterComponent}) => {
   const navigation = useNavigation();
   const handleClick = item => {
     navigation.navigate(Constants.SCREEN_MOVIE, item);
   };
+
   return (
     <View style={{marginBottom: spacing.MARGIN_10, flex: 1}}>
       <Text
@@ -35,17 +37,22 @@ const TrandingMovie = ({data}) => {
         // pagingEnabled
         showsHorizontalScrollIndicator={false}
         data={data}
-        renderItem={({item}) => {
-          return <MovieCard item={item} handleClick={handleClick} />;
+        onEndReached={onEndReached}
+        listFooterComponent={listFooterComponent}
+        renderItem={({item, index}) => {
+          return <MovieCard item={item} key={'Tranding_data'+index}  handleClick={handleClick} />;
         }}
+        keyExtractor={(item, index) => String(index)}
+        
       />
+      
     </View>
   );
 };
 
-export default TrandingMovie;
+export default memo(TrandingMovie);
 
-const MovieCard = ({handleClick, item}) => {
+const MovieCard = ({handleClick, item,}) => {
   // console.log('item',item.poster_path)
   return (
     <TouchableOpacity
@@ -57,7 +64,8 @@ const MovieCard = ({handleClick, item}) => {
         alignItems: 'center',
       }}
       onPress={() => handleClick(item)}
-      activeOpacity={1}>
+      activeOpacity={1}
+      >
       <Image
         // source={require('../../Assets/Images/img.jpg')}
         source={{uri: image500(item.poster_path)}}
